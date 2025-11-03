@@ -1,4 +1,3 @@
-
 export enum View {
   Dashboard = 'DASHBOARD',
   StudyLog = 'STUDY_LOG',

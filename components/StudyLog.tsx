@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { StudySession } from '../types';
 import { PlusIcon, TrashIcon } from './icons';
@@ -62,12 +61,12 @@ const StudyLog: React.FC<StudyLogProps> = ({ sessions, addSession, deleteSession
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-md">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
             <div>
                  <h2 className="text-xl font-semibold">فعالیت‌های مطالعاتی</h2>
                  <p className="text-gray-500">{formatDate(selectedDate)}</p>
             </div>
-            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center transition-colors">
+            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center transition-colors">
                 <PlusIcon className="w-5 h-5 ml-2" />
                 افزودن فعالیت جدید
             </button>
@@ -106,8 +105,8 @@ const StudyLog: React.FC<StudyLogProps> = ({ sessions, addSession, deleteSession
       </div>
       
       {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md m-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
                   <h2 className="text-2xl font-bold mb-6">افزودن فعالیت جدید</h2>
                   <div className="space-y-4">
                       <input type="text" placeholder="نام فعالیت" value={newActivity.activityName} onChange={(e) => setNewActivity({...newActivity, activityName: e.target.value})} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"/>

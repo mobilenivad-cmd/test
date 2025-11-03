@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { StudySession, Note } from '../types';
 import { getStudyTip } from '../services/geminiService';
-import { ClockIcon, PlusIcon, TrashIcon, RefreshIcon } from './icons';
+import { ClockIcon, PlusIcon, TrashIcon, RefreshIcon, SparklesIcon } from './icons';
 
 interface DashboardProps {
   studySessions: StudySession[];
@@ -24,35 +24,35 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }
 
 const Dashboard: React.FC<DashboardProps> = ({ studySessions, notes, addNote, deleteNote }) => {
     const [counselorTip, setCounselorTip] = useState<string>("");
-    const [isLoadingTip, setIsLoadingTip] = useState(true);
+    const [isLoadingTip, setIsLoadingTip] = useState(false);
     const [newNote, setNewNote] = useState('');
+    const [tipFetched, setTipFetched] = useState(false);
+
 
     const fetchTip = useCallback(async () => {
         setIsLoadingTip(true);
         const tip = await getStudyTip();
         setCounselorTip(tip);
         setIsLoadingTip(false);
-    }, []);
-
-    useEffect(() => {
-        fetchTip();
-    }, [fetchTip]);
+        if (!tipFetched) {
+            setTipFetched(true);
+        }
+    }, [tipFetched]);
 
     const stats = useMemo(() => {
         const totalMinutes = studySessions.reduce((acc, s) => acc + s.duration, 0);
         const totalHours = (totalMinutes / 60).toFixed(1);
-        const today = new Date().toISOString().split('T')[0];
         const studyDays = new Set(studySessions.map(s => s.date));
         const dailyAverage = studyDays.size > 0 ? (totalMinutes / studyDays.size / 60).toFixed(1) : '0';
         
-        // rudimentary consistency score
         const last7Days = Array.from({ length: 7 }, (_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
             return d.toISOString().split('T')[0];
         });
         const consistentDays = last7Days.filter(d => studyDays.has(d)).length;
-        const consistency = studyDays.size > 0 ? ((consistentDays / 7) * 100).toFixed(0) : '0';
+        const consistency = studyDays.size > 0 ? Math.round((studySessions.filter(s => last7Days.includes(s.date)).length / 7) * 100) : 0;
+
 
         return {
             totalHours,
@@ -73,8 +73,8 @@ const Dashboard: React.FC<DashboardProps> = ({ studySessions, notes, addNote, de
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="مجموع مطالعه" value={`${stats.totalHours} ساعت`} icon={<ClockIcon className="w-6 h-6"/>} />
                 <StatCard title="میانگین روزانه" value={`${stats.dailyAverage} ساعت`} icon={<ClockIcon className="w-6 h-6"/>} />
-                <StatCard title="مأموریت‌های انجام شده" value={`${stats.missions}`} icon={<ClockIcon className="w-6 h-6"/>} />
-                <StatCard title="استمرار" value={`% ${stats.consistency}`} icon={<ClockIcon className="w-6 h-6"/>} />
+                <StatCard title="مأموریت‌های انجام شده" value={`${stats.missions}`} icon={<PlusIcon className="w-6 h-6"/>} />
+                <StatCard title="استمرار (هفته اخیر)" value={`% ${stats.consistency}`} icon={<RefreshIcon className="w-6 h-6"/>} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -88,24 +88,38 @@ const Dashboard: React.FC<DashboardProps> = ({ studySessions, notes, addNote, de
                 <div className="bg-white p-6 rounded-xl shadow-md">
                      <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">نکتهٔ مشاور</h2>
-                        <button 
-                            onClick={fetchTip} 
-                            disabled={isLoadingTip}
-                            className="p-2 rounded-full text-blue-600 bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-wait transition-colors"
-                            aria-label="دریافت نکته جدید"
-                        >
-                            <RefreshIcon className={`w-5 h-5 ${isLoadingTip ? 'animate-spin' : ''}`}/>
-                        </button>
+                        {tipFetched && (
+                            <button 
+                                onClick={fetchTip} 
+                                disabled={isLoadingTip}
+                                className="p-2 rounded-full text-blue-600 bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-wait transition-colors"
+                                aria-label="دریافت نکته جدید"
+                            >
+                                <RefreshIcon className={`w-5 h-5 ${isLoadingTip ? 'animate-spin' : ''}`}/>
+                            </button>
+                        )}
                     </div>
-                    <div className="text-gray-600 bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg min-h-[6rem] flex items-center justify-center">
-                         {isLoadingTip ? (
+                    <div className="text-gray-600 bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg min-h-[10rem] flex flex-col items-center justify-center">
+                        {isLoadingTip ? (
                             <div className="flex items-center space-x-2 space-x-reverse">
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75"></div>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></div>
+                                <span className="text-sm text-gray-500 mr-2">در حال دریافت نکته...</span>
                             </div>
+                        ) : tipFetched ? (
+                            <p className="text-center">{counselorTip}</p>
                         ) : (
-                            <p>{counselorTip}</p>
+                            <div className="text-center">
+                                <p className="mb-4 text-gray-500">برای دریافت یک نکته مفید و انگیزشی کلیک کنید.</p>
+                                <button
+                                    onClick={fetchTip}
+                                    className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center transition-colors"
+                                >
+                                    <SparklesIcon className="w-5 h-5 ml-2" />
+                                    <span>دریافت نکته</span>
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const POMODORO = 25 * 60;
@@ -15,7 +14,6 @@ const Pomodoro: React.FC = () => {
     const [mode, setMode] = useState<Mode>(Mode.Pomodoro);
     const [time, setTime] = useState(POMODORO);
     const [isActive, setIsActive] = useState(false);
-    // Fix: Use ReturnType<typeof setInterval> for browser compatibility instead of NodeJS.Timeout
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const timeForMode = (currentMode: Mode) => {

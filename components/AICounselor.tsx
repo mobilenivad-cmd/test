@@ -5,7 +5,7 @@ import { SendIcon, BrainIcon } from './icons';
 
 const AICounselor: React.FC = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: 'initial', sender: 'ai', text: 'درود! من مشاور هوشمند و شخصی شما هستم. آماده‌ام تا در مورد برنامه‌ریزی درسی، رفع اشکال، مدیریت زمان و ایجاد انگیزه به شما کمک کنم. چه سوالی در ذهن دارید؟' }
+        { id: 'initial', sender: 'ai', text: 'درود! من مشاور هوشمند و شخصی شما، «هوشمند»، هستم. آماده‌ام تا بر اساس اصول شناختی و برنامه‌ریزی مؤثر، در مورد برنامه‌ریزی درسی، رفع اشکال، مدیریت زمان و ایجاد انگیزه به شما کمک کنم. چه سوالی در ذهن دارید؟' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -23,17 +23,23 @@ const AICounselor: React.FC = () => {
         const newUserMessage: ChatMessage = { id: Date.now().toString(), sender: 'user', text: input };
         const currentInput = input;
         
-        const history = [...messages, newUserMessage].map(msg => ({
-            role: msg.sender === 'user' ? 'user' as const : 'model' as const,
-            parts: [{ text: msg.text }]
-        }));
+        // Prepare history for API, excluding the initial message if it's the only one, or any empty AI message
+        const history = [...messages, newUserMessage]
+            .filter(msg => msg.id !== 'initial' && msg.text !== '')
+            .map(msg => ({
+                role: msg.sender === 'user' ? 'user' as const : 'model' as const,
+                parts: [{ text: msg.text }]
+            }));
+        
+        // Remove the last element which is the current user message for history
+        history.pop();
 
         setInput('');
         setIsLoading(true);
         setMessages(prev => [
             ...prev, 
             newUserMessage,
-            { id: (Date.now() + 1).toString(), sender: 'ai', text: '' }
+            { id: (Date.now() + 1).toString(), sender: 'ai', text: '' } // Placeholder for streaming
         ]);
 
         try {
@@ -57,7 +63,7 @@ const AICounselor: React.FC = () => {
             setMessages(prev => {
                 const updatedMessages = [...prev];
                 const lastMessage = updatedMessages[updatedMessages.length - 1];
-                if (lastMessage && lastMessage.sender === 'ai') {
+                if (lastMessage && lastMessage.sender === 'ai' && lastMessage.text === '') {
                      lastMessage.text = "متاسفانه مشکلی در ارتباط با هوش مصنوعی پیش آمده. لطفاً دوباره تلاش کنید.";
                 }
                 return updatedMessages;
@@ -69,8 +75,11 @@ const AICounselor: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full bg-white rounded-xl shadow-md">
-            <div className="p-4 border-b border-gray-200 flex items-center bg-gray-50/50">
-                <BrainIcon className="w-7 h-7 text-indigo-600"/>
+            <div className="p-4 border-b border-gray-200 flex items-center bg-gray-50/50 rounded-t-xl">
+                <div className="relative">
+                    <BrainIcon className="w-8 h-8 text-indigo-600"/>
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-gray-50"></div>
+                </div>
                 <h1 className="text-xl font-bold text-gray-800 mr-3">مشاور هوشمند حرفه‌ای</h1>
             </div>
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
@@ -81,8 +90,8 @@ const AICounselor: React.FC = () => {
                                 <BrainIcon className="w-6 h-6" />
                             </div>
                         )}
-                        <div className={`max-w-lg p-4 rounded-2xl ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
-                            <p className="whitespace-pre-wrap">{msg.text}
+                        <div className={`max-w-xl p-4 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                            <p className="whitespace-pre-wrap leading-relaxed">{msg.text}
                                 {isLoading && index === messages.length - 1 && msg.sender === 'ai' && (
                                     <span className="inline-block w-2 h-5 bg-gray-700 animate-pulse ml-1 align-bottom"></span>
                                 )}
@@ -92,7 +101,7 @@ const AICounselor: React.FC = () => {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 bg-white rounded-b-xl">
                 <div className="flex items-center bg-gray-100 rounded-xl p-2">
                     <input
                         type="text"

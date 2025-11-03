@@ -1,7 +1,6 @@
-
 import React, { useState, useCallback } from 'react';
 import { View, StudySession, Note } from './types';
-import { DashboardIcon, CalendarIcon, ChartIcon, TestIcon, ClockIcon, SparklesIcon } from './components/icons';
+import { DashboardIcon, CalendarIcon, ChartIcon, TestIcon, ClockIcon, SparklesIcon, BrainIcon } from './components/icons';
 import Dashboard from './components/Dashboard';
 import StudyLog from './components/StudyLog';
 import AICounselor from './components/AICounselor';
@@ -79,7 +78,7 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-white shadow-lg p-4 flex flex-col">
         <div className="flex items-center mb-8 px-2">
-           <SparklesIcon className="w-8 h-8 text-blue-600"/>
+           <BrainIcon className="w-8 h-8 text-blue-600"/>
            <h1 className="text-xl font-bold text-gray-800 mr-2">مشاور هوشمند</h1>
         </div>
         <nav className="flex-1 space-y-2">
